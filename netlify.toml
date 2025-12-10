@@ -1,6 +1,10 @@
 [build]
   functions = "netlify/functions"
   publish = "public"
+  command = "npm install"
+
+[functions]
+  included_files = ["views/**", "public/**"]
 
 # Serve static files from public directory
 [[redirects]]

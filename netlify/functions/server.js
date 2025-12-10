@@ -1,6 +1,7 @@
 const serverless = require('serverless-http');
 const mongoose = require('mongoose');
 const dotenv = require('dotenv');
+const path = require('path');
 
 // Only load config.env in local development (Netlify provides env vars via process.env)
 if (process.env.NODE_ENV !== 'production') {
@@ -8,6 +9,11 @@ if (process.env.NODE_ENV !== 'production') {
 }
 
 const app = require('../../app');
+
+// Fix views path for Netlify serverless environment
+// In Netlify, __dirname in app.js might not resolve correctly, so we set it explicitly
+const projectRoot = path.join(__dirname, '../..');
+app.set('views', path.join(projectRoot, 'views'));
 
 let isConnected = false;
 let connPromise = null;
