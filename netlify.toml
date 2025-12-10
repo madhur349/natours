@@ -1,0 +1,16 @@
+[build]
+  functions = "netlify/functions"
+  publish = "public"
+
+# Serve static files from public directory
+[[redirects]]
+  from = "/public/*"
+  to = "/public/:splat"
+  status = 200
+
+# Route all other requests to the serverless function
+[[redirects]]
+  from = "/*"
+  to = "/.netlify/functions/server"
+  status = 200
+
