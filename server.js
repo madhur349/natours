@@ -26,23 +26,16 @@ mongoose
 
 
 
-// Only start the server when this file is run directly (not when required by Vercel)
-let server;
-if (require.main === module) {
-  const port = process.env.PORT || 3000;
-  server = app.listen(port, () => {
-    console.log(`App running on port ${port}`);
-  });
-}
-
-process.on('unhandledRejection', err => {
-  console.log('Unhandler Rejection !  Shutting down...');
-  console.log(err.name, err.message);
-  if (server) {
-    server.close(() => {
-      process.exit(1);
-    });
-  } else {
-    process.exit(1);
-  }
+const port = 3000;
+app.listen(port, () => {
+  console.log(`App running on port ${port}`);
 });
+
+
+process.on('unhandledRejection',err=>{
+  console.log('Unhandler Rejection !  Shutting down...')
+  console.log(err.name,err.message);
+  server.close(()=>{
+    process.exit(1);
+  })
+})
