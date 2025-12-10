@@ -1,0 +1,80 @@
+extends base
+
+block content
+    main.main
+        .booking
+            .booking__header
+                .booking__tour-info
+                    h2.heading-secondary.ma-bt-md= `Book ${tour.name} Tour`
+                    .booking__tour-details
+                        .booking__detail
+                            svg.booking__icon
+                                use(xlink:href='/img/icons.svg#icon-clock')
+                            span=`${tour.duration} days`
+                        .booking__detail
+                            svg.booking__icon
+                                use(xlink:href='/img/icons.svg#icon-map-pin')
+                            span= tour.startLocation.description
+                        .booking__detail
+                            svg.booking__icon
+                                use(xlink:href='/img/icons.svg#icon-star')
+                            span= `${tour.ratingsAverage}/5 rating`
+                
+                .booking__price-box
+                    .booking__price-label Total Price
+                    .booking__price= `₹${tour.price}`
+                    .booking__price-note per person
+            
+            .booking__content
+                .booking__form-container
+                    h3.heading-tertiary.ma-bt-md Booking Summary
+                    .booking__summary
+                        .booking__summary-item
+                            span.booking__summary-label Tour:
+                            span.booking__summary-value= tour.name
+                        .booking__summary-item
+                            span.booking__summary-label Duration:
+                            span.booking__summary-value= `${tour.duration} days`
+                        .booking__summary-item
+                            span.booking__summary-label Price:
+                            span.booking__summary-value= `₹${tour.price}`
+                        .booking__summary-item.booking__summary-item--total
+                            span.booking__summary-label Total Amount:
+                            span.booking__summary-value.booking__summary-value--total= `₹${tour.price}`
+                    
+                    .booking__payment-section
+                        h3.heading-tertiary.ma-bt-md Payment Information
+                        .booking__note
+                            p 
+                                | You will be redirected to PayU secure payment gateway to complete your booking.
+                                | This is a test/sandbox environment - no real money will be charged.
+                        
+                        if user
+                            .booking__user-info
+                                .booking__user-detail
+                                    span.booking__user-label Name:
+                                    span.booking__user-value= user.name
+                                .booking__user-detail
+                                    span.booking__user-label Email:
+                                    span.booking__user-value= user.email
+                        
+                        button.btn.btn--green.btn--large#bookTourBtn(data-tour-id=tour._id)
+                            span.btn__text Book Tour Now
+                            svg.btn__icon
+                                use(xlink:href='/img/icons.svg#icon-arrow-right')
+                        
+                        .booking__loader.hidden#bookingLoader
+                            .spinner
+                                svg.spinner__icon
+                                    use(xlink:href='/img/icons.svg#icon-loader')
+                            p Processing...
+                        
+                        .booking__error.hidden#bookingError
+                            p.error__msg Something went wrong! Please try again.
+                
+                .booking__image-container
+                    img.booking__tour-image(src=`/img/tours/${tour.imageCover}`, alt=`${tour.name}`)
+
+block append head
+    script(type='module' src='/js/booking.js')
+

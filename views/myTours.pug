@@ -1,0 +1,60 @@
+extends base
+
+block content
+    main.main
+        .my-tours
+            .my-tours__header
+                h2.heading-secondary My Bookings
+
+            if bookings && bookings.length > 0
+                .my-tours__list
+                    each booking in bookings
+                        .my-tours__card
+                            .my-tours__card-header
+                                h3.heading-tertiary= booking.tour.name
+                                .my-tours__status(class=`my-tours__status--${booking.paymentStatus}`)
+                                    = booking.paymentStatus.charAt(0).toUpperCase() + booking.paymentStatus.slice(1)
+                            
+                            .my-tours__card-body
+                                .my-tours__info
+                                    .my-tours__info-item
+                                        svg.my-tours__icon
+                                            use(xlink:href='/img/icons.svg#icon-calendar')
+                                        span= booking.createdAt.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })
+                                    .my-tours__info-item
+                                        svg.my-tours__icon
+                                            use(xlink:href='/img/icons.svg#icon-dollar-sign')
+                                        span= `₹${booking.price}`
+                                    if booking.txnid
+                                        .my-tours__info-item
+                                            svg.my-tours__icon
+                                                use(xlink:href='/img/icons.svg#icon-credit-card')
+                                            span= `TXN: ${booking.txnid.substring(0, 15)}...`
+                                
+                                .my-tours__tour-image
+                                    img(src=`/img/tours/${booking.tour.imageCover}`, alt=booking.tour.name)
+                            
+                            .my-tours__card-footer
+                                if booking.paymentStatus === 'success'
+                                    a.btn.btn--small.btn--green(href=`/tours/${booking.tour.slug}`) View Tour Details
+                                else if booking.paymentStatus === 'pending'
+                                    a.btn.btn--small.btn--orange(href=`/tours/${booking.tour.slug}/book`) Complete Payment
+                                else
+                                    a.btn.btn--small.btn--green(href=`/tours/${booking.tour.slug}/book`) Try Again
+
+            else
+                .my-tours__empty
+                    svg.my-tours__empty-icon
+                        use(xlink:href='/img/icons.svg#icon-briefcase')
+                    h3.heading-tertiary You haven't booked any tours yet
+                    p.my-tours__empty-text Start exploring amazing tours and book your next adventure!
+                    a.btn.btn--green(href='/') Browse Tours
+
+            //- Show booking status message if redirected from payment
+            if query && query.booking === 'success'
+                .alert.alert--success
+                    | ✅ Booking confirmed! Your payment was successful.
+            else if query && query.booking === 'failed'
+                .alert.alert--error
+                    | ❌ Payment failed. Please try again.
+
