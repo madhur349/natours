@@ -10,7 +10,14 @@ const app = require('../app');
 let connPromise;
 const connectDB = () => {
   if (!connPromise) {
-    const DB = process.env.DATABASE.replace('<PASSWORD>', process.env.DATABASE_PASSWORD);
+    const dbUser = process.env.DB_USERNAME;
+    const dbPass = process.env.DATABASE_PASSWORD;
+    if (!dbUser) throw new Error('DB_USERNAME env var is missing');
+    if (!dbPass) throw new Error('DATABASE_PASSWORD env var is missing');
+
+    const DB = process.env.DATABASE
+      .replace('<USERNAME>', dbUser)
+      .replace('<PASSWORD>', dbPass);
     connPromise = mongoose.connect(DB, {
       useNewUrlParser: true,
       useCreateIndex: true,
