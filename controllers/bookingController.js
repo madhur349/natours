@@ -8,12 +8,22 @@ const factory = require('./handlerFactory');
 exports.getCheckoutSession = catchAsync(async (req, res, next) => {
   const tour = await Tour.findById(req.params.tourId);
   
+  // Get the correct protocol and host for serverless environments (Netlify, Vercel, etc.)
+  const protocol = req.headers['x-forwarded-proto'] || req.protocol || 'https';
+  const host = req.headers['x-forwarded-host'] || req.get('host') || process.env.HOST || 'localhost:3000';
+  const baseUrl = `${protocol}://${host}`;
+  
+  // Construct absolute image URL
+  const imageUrl = tour.imageCover.startsWith('http') 
+    ? tour.imageCover 
+    : `${baseUrl}/img/tours/${tour.imageCover}`;
+  
    const session = await stripe.checkout.sessions.create({
     payment_method_types: ['card'],
     mode: 'payment',
     locale: 'en',
-    success_url: `${req.protocol}://${req.get('host')}/?tour=${req.params.tourId}&user=${req.user.id}&price=${tour.price}&session_id={CHECKOUT_SESSION_ID}`,
-    cancel_url: `${req.protocol}://${req.get('host')}/tour/${tour.slug}`,
+    success_url: `${baseUrl}/?tour=${req.params.tourId}&user=${req.user.id}&price=${tour.price}&session_id={CHECKOUT_SESSION_ID}`,
+    cancel_url: `${baseUrl}/tour/${tour.slug}`,
     customer_email: req.user.email,
     client_reference_id: req.params.tourId,
     line_items: [
@@ -25,7 +35,7 @@ exports.getCheckoutSession = catchAsync(async (req, res, next) => {
           product_data: {
             name: `${tour.name} Tour`,
             description: tour.summary,
-            images: [`/img/tours/${tour.imageCover}`],
+            images: [imageUrl],
           },
         },
       },
