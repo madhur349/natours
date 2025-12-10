@@ -59,7 +59,12 @@ exports.createBookingCheckout = catchAsync(async (req, res, next) => {
 
   // Avoid duplicate bookings for same transaction
   const existing = await Booking.findOne({ txnid: txnId });
-  if (existing) return res.redirect(req.originalUrl.split('?')[0]);
+  if (existing) {
+    // Use absolute URL for redirect in serverless environments
+    const protocol = req.headers['x-forwarded-proto'] || req.protocol || 'https';
+    const host = req.headers['x-forwarded-host'] || req.get('host') || process.env.HOST || 'localhost:3000';
+    return res.redirect(`${protocol}://${host}/`);
+  }
 
   await Booking.create({
     tour,
@@ -71,7 +76,10 @@ exports.createBookingCheckout = catchAsync(async (req, res, next) => {
     txnid: txnId,
   });
 
-  res.redirect(req.originalUrl.split('?')[0]);
+  // Use absolute URL for redirect in serverless environments (Netlify, Vercel, etc.)
+  const protocol = req.headers['x-forwarded-proto'] || req.protocol || 'https';
+  const host = req.headers['x-forwarded-host'] || req.get('host') || process.env.HOST || 'localhost:3000';
+  res.redirect(`${protocol}://${host}/`);
 });
 
 exports.createBooking=factory.createOne(Booking);
