@@ -49,37 +49,63 @@ exports.getCheckoutSession = catchAsync(async (req, res, next) => {
 
 exports.createBookingCheckout = catchAsync(async (req, res, next) => {
   const { tour, user, price, session_id: sessionId } = req.query;
+  
+  // If no payment query params, continue to next middleware
   if (!tour || !user || !price || !sessionId) return next();
 
-  // Verify session with Stripe and ensure payment is completed
-  const session = await stripe.checkout.sessions.retrieve(sessionId);
-  if (!session || session.payment_status !== 'paid') return next();
+  try {
+    // Verify session with Stripe and ensure payment is completed
+    const session = await stripe.checkout.sessions.retrieve(sessionId);
+    
+    if (!session) {
+      console.log('Stripe session not found:', sessionId);
+      return next();
+    }
+    
+    if (session.payment_status !== 'paid') {
+      console.log('Payment not completed. Status:', session.payment_status);
+      return next();
+    }
 
-  const txnId = session.id || session.payment_intent;
+    const txnId = session.id || session.payment_intent;
 
-  // Avoid duplicate bookings for same transaction
-  const existing = await Booking.findOne({ txnid: txnId });
-  if (existing) {
-    // Use absolute URL for redirect in serverless environments
+    // Avoid duplicate bookings for same transaction
+    const existing = await Booking.findOne({ txnid: txnId });
+    if (existing) {
+      console.log('Booking already exists for transaction:', txnId);
+      // Use absolute URL for redirect in serverless environments
+      const protocol = req.headers['x-forwarded-proto'] || req.protocol || 'https';
+      const host = req.headers['x-forwarded-host'] || req.get('host') || process.env.HOST || 'localhost:3000';
+      return res.redirect(`${protocol}://${host}/`);
+    }
+
+    // Create the booking
+    await Booking.create({
+      tour,
+      user,
+      price,
+      paymentStatus: 'success',
+      paymentId: session.payment_intent,
+      paid: true,
+      txnid: txnId,
+    });
+
+    console.log('Booking created successfully for tour:', tour);
+
+    // Use absolute URL for redirect in serverless environments (Netlify, Vercel, etc.)
+    const protocol = req.headers['x-forwarded-proto'] || req.protocol || 'https';
+    const host = req.headers['x-forwarded-host'] || req.get('host') || process.env.HOST || 'localhost:3000';
+    const redirectUrl = `${protocol}://${host}/`;
+    
+    console.log('Redirecting to:', redirectUrl);
+    return res.redirect(redirectUrl);
+  } catch (error) {
+    console.error('Error in createBookingCheckout:', error);
+    // Even on error, redirect to clean URL to avoid showing error in URL
     const protocol = req.headers['x-forwarded-proto'] || req.protocol || 'https';
     const host = req.headers['x-forwarded-host'] || req.get('host') || process.env.HOST || 'localhost:3000';
     return res.redirect(`${protocol}://${host}/`);
   }
-
-  await Booking.create({
-    tour,
-    user,
-    price,
-    paymentStatus: 'success',
-    paymentId: session.payment_intent,
-    paid: true,
-    txnid: txnId,
-  });
-
-  // Use absolute URL for redirect in serverless environments (Netlify, Vercel, etc.)
-  const protocol = req.headers['x-forwarded-proto'] || req.protocol || 'https';
-  const host = req.headers['x-forwarded-host'] || req.get('host') || process.env.HOST || 'localhost:3000';
-  res.redirect(`${protocol}://${host}/`);
 });
 
 exports.createBooking=factory.createOne(Booking);
