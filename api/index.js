@@ -2,8 +2,10 @@ const serverless = require('serverless-http');
 const mongoose = require('mongoose');
 const dotenv = require('dotenv');
 
-// Load env vars (Vercel envs are available via process.env; config.env is for local fallback)
-dotenv.config({ path: './config.env' });
+// Only load config.env in local development (Vercel provides env vars via process.env)
+if (process.env.NODE_ENV !== 'production') {
+  dotenv.config({ path: './config.env' });
+}
 
 const app = require('../app');
 
